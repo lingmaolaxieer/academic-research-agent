@@ -1,0 +1,102 @@
+[
+  {
+    "id": "rag-vs-finetuning",
+    "query": "What are the trade-offs of RAG vs fine-tuning for adapting an LLM to a private knowledge base?",
+    "key_points": [
+      "RAG keeps knowledge external and updatable without retraining",
+      "fine-tuning bakes knowledge/behaviour into weights",
+      "cost and latency differences",
+      "when each approach is preferable"
+    ]
+  },
+  {
+    "id": "vector-db-choice",
+    "query": "Compare pgvector, Pinecone, and Qdrant for production vector search.",
+    "key_points": [
+      "pgvector runs inside Postgres (operational simplicity)",
+      "Pinecone is fully managed / serverless",
+      "Qdrant is open-source and self-hostable",
+      "scaling and filtering capabilities"
+    ]
+  },
+  {
+    "id": "agent-memory",
+    "query": "What are the main approaches to giving an LLM agent long-term memory?",
+    "key_points": [
+      "short-term vs long-term memory distinction",
+      "vector-store / retrieval-based memory",
+      "summarization / compaction",
+      "structured or episodic memory stores"
+    ]
+  },
+  {
+    "id": "llm-eval-methods",
+    "query": "How do teams evaluate the quality of LLM-generated text in production?",
+    "key_points": [
+      "LLM-as-judge",
+      "reference-based vs reference-free metrics",
+      "human evaluation",
+      "regression testing in CI"
+    ]
+  },
+  {
+    "id": "prompt-injection",
+    "query": "What is prompt injection and what defences exist against it?",
+    "key_points": [
+      "definition of prompt injection",
+      "direct vs indirect injection",
+      "input/output guardrails",
+      "privilege separation / least privilege for tools"
+    ]
+  },
+  {
+    "id": "moe-architecture",
+    "query": "How does a mixture-of-experts (MoE) architecture reduce inference cost in large language models?",
+    "key_points": [
+      "sparse activation of experts",
+      "router / gating network",
+      "active vs total parameter count",
+      "trade-offs such as memory footprint"
+    ]
+  },
+  {
+    "id": "structured-output",
+    "query": "What techniques force an LLM to return reliable structured (JSON) output?",
+    "key_points": [
+      "constrained / grammar-based decoding",
+      "function/tool calling",
+      "schema validation and retry",
+      "provider-native structured-output modes"
+    ]
+  },
+  {
+    "id": "rate-limit-backoff",
+    "query": "How should a system handle LLM API rate limits (HTTP 429) under concurrent load?",
+    "key_points": [
+      "exponential backoff with jitter",
+      "retry policies",
+      "concurrency limiting / queuing",
+      "respecting Retry-After headers"
+    ]
+  },
+  {
+    "id": "quantization",
+    "query": "What is model quantization and how does it affect LLM inference?",
+    "key_points": [
+      "reducing weight precision (e.g. int8/int4)",
+      "memory and speed benefits",
+      "accuracy/quality trade-offs",
+      "common methods (GPTQ, AWQ, bitsandbytes)"
+    ]
+  },
+  {
+    "id": "multi-agent-vs-single",
+    "query": "When is a multi-agent system worth the added complexity over a single LLM agent?",
+    "key_points": [
+      "parallelizable / decomposable tasks",
+      "specialization of roles",
+      "coordination and cost overhead",
+      "cases where a single agent suffices"
+    ]
+  }
+]

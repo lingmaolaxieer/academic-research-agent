@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>学术资料调研助手</title>
+<style>
+:root{font-family:"Microsoft YaHei",system-ui,sans-serif;color:#18304b;background:#f3f6fa;font-size:15px}
+*{box-sizing:border-box}body{margin:0}header{padding:28px max(24px,calc((100vw - 1200px)/2));background:#142d4e;color:white}
+header p{color:#c6d7eb;margin-bottom:0}h1{font-size:25px;margin:0}h2{font-size:18px;margin:0 0 18px}h3{font-size:15px}
+main{max-width:1248px;margin:24px auto;padding:0 24px;display:grid;grid-template-columns:360px 1fr;gap:22px}
+.card{background:white;border:1px solid #dce4ed;border-radius:12px;padding:22px;margin-bottom:20px}
+label{display:block;margin:12px 0 7px;font-weight:600}input,textarea,select,button{font:inherit}
+input[type=password],textarea,select{width:100%;padding:10px;border:1px solid #bccbdb;border-radius:6px;background:white}
+textarea{resize:vertical;min-height:96px}button{border:0;border-radius:6px;padding:10px 16px;background:#225fb9;color:white;cursor:pointer;margin:8px 6px 4px 0}
+button.secondary{background:#eaf0f8;color:#23466f}button:disabled{opacity:.5;cursor:wait}
+.hint{font-size:13px;color:#61758c;line-height:1.7}.row{display:flex;align-items:center;gap:10px}
+.row label{margin:8px 0}.document{border-bottom:1px solid #edf1f5;padding:8px 0;overflow-wrap:anywhere}
+.document button{padding:4px 8px;font-size:12px}.status{padding:12px;border-radius:6px;background:#edf3fb;margin:12px 0;overflow-wrap:anywhere}
+pre,.report{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.85;font:inherit;line-height:1.85}
+details{border:1px solid #dce4ed;border-radius:6px;padding:12px;margin:10px 0}summary{cursor:pointer;overflow-wrap:anywhere}
+details p{white-space:pre-wrap;line-height:1.7}a{color:#225fb9}#error{color:#a52b36;white-space:pre-wrap}
+.hidden{display:none}@media(max-width:850px){main{grid-template-columns:1fr}header{padding:24px}}
+</style>
+</head>
+<body>
+<header><h1>学术资料调研助手</h1><p>从论文与技术资料中寻找依据，比较方法，整理有出处的结论。</p></header>
+<main>
+<aside>
+<section class="card"><h2>我的资料</h2>
+<label for="key">访问密钥</label><input id="key" type="password" autocomplete="off" placeholder="本地匿名模式可留空">
+<p class="hint">密钥只保留在当前页面内存中。更换密钥后请重新加载资料。</p>
+<button id="refresh" class="secondary">加载资料</button>
+<label for="file">添加文档</label><input id="file" type="file" accept=".pdf,.md,.txt">
+<p class="hint">支持可提取文字的 PDF、Markdown 和 TXT，单份不超过 5 MB。扫描件需要先转为文字。</p>
+<button id="upload">上传</button><div id="documents"></div>
+<p class="hint">勾选限定资料；不勾选时使用账号下全部资料。删除资料会移除检索索引，历史报告中的证据快照仍会保留。</p>
+</section>
+<section class="card"><h2>回答偏好</h2>
+<textarea id="preferences" placeholder="例如：使用中文，比较方法时优先说明适用条件。"></textarea>
+<button id="savePreferences" class="secondary">保存偏好</button>
+<p class="hint">仅保存你主动填写的偏好；清空后保存即可删除。</p></section>
+</aside>
+<div>
+<section class="card"><h2>开始调研</h2>
+<label for="query">你想了解什么？</label>
+<textarea id="query" placeholder="例如：比较这些资料中可见光与红外融合的方法，说明适用条件及证据不足之处。"></textarea>
+<label for="mode">资料来源</label>
+<select id="mode"><option value="auto">自动选择：有文档时查文档，否则查网页</option><option value="local">仅使用我的文档</option><option value="web">仅搜索公开网页</option><option value="hybrid">文档与网页结合</option></select>
+<label for="depth">研究深度</label>
+<select id="depth"><option value="auto">自动判断</option><option value="quick">快速问答</option><option value="deep">深度调研</option></select>
+<p class="hint">网页模式会向外部搜索服务发送检索词；结合模式可能根据文档内容生成检索词。敏感资料请选“仅使用我的文档”。</p>
+<div class="row"><input id="approval" type="checkbox"><label for="approval">执行前先让我审核研究计划</label></div>
+<button id="start">开始调研</button>
+<div id="error" role="alert"></div>
+</section>
+<section class="card">
+<h2>研究结果</h2><div id="status" class="status" role="status">提交问题后，这里将显示进度和结果。</div>
+<div class="row"><input id="task" placeholder="任务编号" aria-label="任务编号"><button id="lookup" class="secondary">查询已有任务</button><button id="cancel" class="secondary">取消任务</button></div>
+<div id="approvalPanel" class="hidden"><h3>待审核的计划</h3><pre id="plan"></pre>
+<textarea id="feedback" placeholder="编辑：每行一个子任务；拒绝：输入修改建议。"></textarea>
+<button data-action="approve">批准</button><button data-action="edit" class="secondary">按上方内容修改</button><button data-action="reject" class="secondary">要求重拟</button><button data-action="abort" class="secondary">终止</button>
+</div>
+<div id="report" class="report"></div><div id="sources"></div>
+</section>
+</div>
+</main>
+<script>
+const el = id => document.getElementById(id);
+let timer = null, activeTask = "", eventAbort = null, pendingSubmission = null;
+let streamConnected = false;
+async function api(path, options = {}) {
+  const headers = new Headers(options.headers || {});
+  if (el("key").value) headers.set("X-API-Key", el("key").value);
+  if (options.body && !(options.body instanceof FormData)) headers.set("Content-Type", "application/json");
+  const response = await fetch(path, {...options, headers});
+  const result = await response.json();
+  if (!response.ok) throw new Error(typeof result.detail === "string" ? result.detail : JSON.stringify(result.detail));
+  return result;
+}
+function fail(error) {el("error").textContent = error.message; }
+async function act(fn) {el("error").textContent = ""; try {await fn();} catch(error) {fail(error);} }
+async function loadDocuments() {
+  const docs = await api("/documents"); el("documents").replaceChildren();
+  for (const doc of docs) {
+    const div = document.createElement("div"); div.className = "document";
+    const label = document.createElement("label"), checkbox = document.createElement("input");
+    checkbox.type = "checkbox"; checkbox.value = doc.document_id; checkbox.name = "document";
+    label.append(checkbox, document.createTextNode(" " + doc.name));
+    const remove = document.createElement("button"); remove.className = "secondary"; remove.textContent = "删除";
+    remove.onclick = () => act(async () => {await api("/documents/" + encodeURIComponent(doc.document_id), {method:"DELETE"}); await loadDocuments();});
+    div.append(label, remove); el("documents").append(div);
+  }
+}
+el("refresh").onclick = () => act(async () => {
+  await loadDocuments(); el("preferences").value = (await api("/memory/preferences")).instructions;
+});
+el("upload").onclick = () => act(async () => {
+  if (!el("file").files.length) throw new Error("请先选择文档");
+  const data = new FormData(); data.append("file", el("file").files[0]);
+  el("upload").disabled = true;
+  try {await api("/documents", {method:"POST", body:data}); await loadDocuments();}
+  finally {el("upload").disabled = false;}
+});
+el("savePreferences").onclick = () => act(async () => {
+  await api("/memory/preferences", {method:"PUT", body:JSON.stringify({instructions:el("preferences").value})});
+  el("status").textContent = "偏好已保存";
+});
+function render(result) {
+  const labels = {queued:"任务已进入队列",running:"研究进行中",completed:"研究完成",interrupted:"等待你审核计划",cancelled:"任务已取消",error:"研究未完成"};
+  el("status").textContent = (labels[result.status] || result.status) + " · " + result.thread_id;
+  if (result.error) el("error").textContent = result.error;
+  el("approvalPanel").classList.toggle("hidden", result.status !== "interrupted");
+  el("plan").textContent = result.interrupt ? (result.interrupt.proposed_subtasks || []).join("\n") : "";
+  const report = result.report;
+  el("report").textContent = report ? [result.status === "error" ? "以下为未通过完整流程的中间内容，请勿作为最终结果使用。" : "",
+      report.summary, ...report.sections, report.limitations.length ? "资料与结论的局限\n" + report.limitations.join("\n") : ""].filter(Boolean).join("\n\n") : "";
+  el("sources").replaceChildren();
+  for (const item of result.evidence || []) {
+    const detail = document.createElement("details"), title = document.createElement("summary"), text = document.createElement("p");
+    title.textContent = item.title + (item.page ? " · 第 " + item.page + " 页" : "") + " · " + item.evidence_id;
+    text.textContent = item.text; detail.append(title, text);
+    if (item.source_type === "web" && /^https?:\/\//i.test(item.source)) {
+      const link = document.createElement("a"); link.href = item.source; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = "打开来源"; detail.append(link);
+    }
+    el("sources").append(detail);
+  }
+}
+async function poll(id) {
+  clearTimeout(timer);
+  if (id !== activeTask) return;
+  try {
+    const result = await api("/research/" + encodeURIComponent(id));
+    if (id !== activeTask) return;
+    render(result);
+    if (["queued", "running"].includes(result.status) && !streamConnected)
+      timer = setTimeout(() => poll(id), 5000);
+  } catch(error) {fail(error);}
+}
+async function watchEvents(id) {
+  if (eventAbort) eventAbort.abort();
+  const controller = new AbortController();
+  eventAbort = controller;
+  streamConnected = false;
+  const headers = new Headers();
+  if (el("key").value) headers.set("X-API-Key", el("key").value);
+  try {
+    const response = await fetch("/research/" + encodeURIComponent(id) + "/events", {
+      headers, signal:controller.signal
+    });
+    if (!response.ok || !response.body) throw new Error("进度流暂不可用");
+    streamConnected = true;
+    clearTimeout(timer);
+    const reader = response.body.getReader(), decoder = new TextDecoder();
+    let buffer = "";
+    while (id === activeTask) {
+      const {value, done} = await reader.read(); if (done) break;
+      buffer += decoder.decode(value, {stream:true});
+      const blocks = buffer.split("\n\n"); buffer = blocks.pop();
+      // Model/tool progress events can arrive in bursts. Poll immediately only
+      // for state transitions; the regular 2.5 s poll covers intermediate UI.
+      const terminal = blocks.some(block =>
+        /^event: (completed|error|interrupted|cancelled)$/m.test(block)
+      );
+      if (terminal) await poll(id);
+    }
+    if (id === activeTask && eventAbort === controller) {
+      streamConnected = false;
+      await poll(id);
+    }
+  } catch(error) {
+    if (error.name !== "AbortError" && id === activeTask && eventAbort === controller) {
+      streamConnected = false;
+      timer = setTimeout(() => poll(id), 5000);
+    }
+  }
+}
+el("start").onclick = () => act(async () => {
+  const query = el("query").value.trim(); if (!query) throw new Error("请输入研究问题");
+  el("start").disabled = true;
+  try {
+    const body = JSON.stringify({
+      query,mode:el("mode").value,depth:el("depth").value,require_approval:el("approval").checked,
+      document_ids:[...document.querySelectorAll('input[name="document"]:checked')].map(x=>x.value)
+    });
+    if (!pendingSubmission || pendingSubmission.body !== body) {
+      pendingSubmission = {body, key:crypto.randomUUID()};
+    }
+    const result = await api("/research", {method:"POST", body,
+      headers:{"Idempotency-Key":pendingSubmission.key}});
+    pendingSubmission = null;
+    activeTask = result.thread_id; el("task").value = activeTask;
+    watchEvents(activeTask); await poll(activeTask);
+  } finally {el("start").disabled = false;}
+});
+el("lookup").onclick = () => act(async () => {activeTask = el("task").value.trim(); if (activeTask) {watchEvents(activeTask); await poll(activeTask);}});
+el("cancel").onclick = () => act(async () => {
+  const id = el("task").value.trim(); if (!id) throw new Error("请先输入任务编号");
+  await api("/research/" + encodeURIComponent(id) + "/cancel", {method:"POST"});
+  activeTask = id;
+  if (eventAbort) eventAbort.abort();
+  streamConnected = false;
+  clearTimeout(timer);
+  await poll(id);
+});
+for (const button of document.querySelectorAll("[data-action]")) button.onclick = () => act(async () => {
+  const action = button.dataset.action, body = {action};
+  if (action === "edit") body.subtasks = el("feedback").value.split("\n").map(x=>x.trim()).filter(Boolean);
+  if (action === "reject") body.feedback = el("feedback").value;
+  await api("/research/" + encodeURIComponent(activeTask) + "/resume", {method:"POST", body:JSON.stringify(body)});
+  watchEvents(activeTask);
+  await poll(activeTask);
+});
+</script>
+</body>
+</html>

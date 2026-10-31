@@ -1,0 +1,55 @@
+# ── Version control & Docker meta ───────────────────────
+.git
+.gitignore
+.dockerignore
+Dockerfile
+
+# ── Virtual environments ────────────────────────────────
+.venv
+venv
+env
+ENV
+
+# ── Python bytecode & build artifacts ───────────────────
+__pycache__
+**/__pycache__
+*.py[cod]
+*.egg-info
+build
+dist
+.eggs
+
+# ── Secrets & local runtime state (NEVER ship these) ────
+.env
+.env.*
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# ── Caches (tests / typing / linting / notebooks) ───────
+.pytest_cache
+.uv-cache
+data
+.mypy_cache
+.ruff_cache
+.coverage
+htmlcov
+.ipynb_checkpoints
+
+# ── Docs & dev-only material — not needed at runtime ────
+*.md
+tests
+evals
+conftest.py
+
+# ── CI / tooling / editors / OS junk ────────────────────
+.github
+.claude
+.vscode
+.idea
+*.swp
+.DS_Store
+Thumbs.db
+*.log

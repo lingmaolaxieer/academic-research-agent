@@ -1,0 +1,114 @@
+{
+  "description": "Synthetic engineering fixtures, not real papers or scientific results. Retrieval regression only; not a benchmark of research quality.",
+  "documents": [
+    {
+      "name": "alignment.md",
+      "text": "Alignment protocol: visible thermal fusion requires image registration. Calibration reduces spatial offset between visible and infrared images. This fixture provides no accuracy numbers. 可见光与热红外融合需要图像配准，校准用于减少空间偏移。"
+    },
+    {
+      "name": "early-fusion.md",
+      "text": "Early fusion concatenates visible and thermal image channels before feature extraction. It requires aligned input images. It does not establish superiority under all conditions. 早期融合在特征提取前拼接图像通道。"
+    },
+    {
+      "name": "late-fusion.md",
+      "text": "Late fusion combines detector predictions after separate visible and infrared feature processing. It can combine confidence scores. Prediction fusion differs from early channel concatenation. 后期融合合并检测结果或置信度。"
+    },
+    {
+      "name": "evaluation.md",
+      "text": "Detection evaluation protocol: report mAP, precision and recall, specify the IoU threshold and dataset split. Comparing mAP across different splits or thresholds is not a controlled comparison. 检测评估应注明交并比阈值和数据划分。"
+    },
+    {
+      "name": "robustness.md",
+      "text": "Robustness checklist: evaluate low illumination, occlusion and sensor failure separately. Missing thermal frames require a fallback strategy. 夜间弱光、遮挡和传感器失效应分别评估。"
+    },
+    {
+      "name": "deployment.md",
+      "text": "Deployment checklist: report batch size, image resolution, hardware and latency distribution. Peak memory and throughput depend on configuration. Runtime speed cannot be compared without matching conditions. 部署应记录硬件、图像分辨率、批大小与延迟分布。"
+    }
+  ],
+  "cases": [
+    {
+      "query": "image registration calibration spatial offset",
+      "relevant": [
+        "alignment.md"
+      ]
+    },
+    {
+      "query": "图像配准 校准 空间偏移",
+      "relevant": [
+        "alignment.md"
+      ]
+    },
+    {
+      "query": "early channel concatenation feature extraction",
+      "relevant": [
+        "early-fusion.md"
+      ]
+    },
+    {
+      "query": "早期融合 拼接图像通道",
+      "relevant": [
+        "early-fusion.md"
+      ]
+    },
+    {
+      "query": "late fusion detector predictions confidence scores",
+      "relevant": [
+        "late-fusion.md"
+      ]
+    },
+    {
+      "query": "后期融合 置信度",
+      "relevant": [
+        "late-fusion.md"
+      ]
+    },
+    {
+      "query": "mAP IoU threshold dataset split",
+      "relevant": [
+        "evaluation.md"
+      ]
+    },
+    {
+      "query": "检测评估 交并比阈值 数据划分",
+      "relevant": [
+        "evaluation.md"
+      ]
+    },
+    {
+      "query": "low illumination occlusion sensor failure",
+      "relevant": [
+        "robustness.md"
+      ]
+    },
+    {
+      "query": "夜间弱光 遮挡 传感器失效",
+      "relevant": [
+        "robustness.md"
+      ]
+    },
+    {
+      "query": "batch size resolution latency hardware",
+      "relevant": [
+        "deployment.md"
+      ]
+    },
+    {
+      "query": "部署 硬件 分辨率 延迟分布",
+      "relevant": [
+        "deployment.md"
+      ]
+    },
+    {
+      "query": "fusion early late predictions concatenation",
+      "relevant": [
+        "early-fusion.md",
+        "late-fusion.md"
+      ]
+    },
+    {
+      "query": "quantumchromodynamics",
+      "relevant": []
+    }
+  ]
+}

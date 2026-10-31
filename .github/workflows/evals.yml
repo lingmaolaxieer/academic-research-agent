@@ -1,0 +1,34 @@
+name: evals
+
+# Quality gate: run the agent over the eval dataset and fail the PR if
+# 质量门禁：在评估数据集上运行代理；如果
+# faithfulness / citation accuracy / coverage regress below the thresholds in
+# 忠实度 / 引用准确性 / 覆盖率低于 config.py 中的阈值，则使 PR 失败。
+# Evals are LLM calls, so they run on PRs and manual dispatch only.
+# 评估会调用大语言模型，因此仅在 PR 和手动触发时运行。
+on:
+  workflow_dispatch:
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    env:
+      RUN_LIVE_EVALS: "true"
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+      # Keep CI cheap: cap the dataset. Drop this to run the full set.
+      EVAL_MAX_CASES: "3"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --locked --group dev
+
+      - name: Run evals
+        run: uv run pytest -m eval -s -v

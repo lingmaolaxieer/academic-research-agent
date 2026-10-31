@@ -1,0 +1,104 @@
+x-app: &app
+  image: academic-research-agent:latest
+  build:
+    context: .
+    args:
+      INSTALL_RERANKER: "true"
+  env_file:
+    - path: .env
+      required: false
+  environment: &app-environment
+    RUNTIME_PROFILE: production
+    TASK_BACKEND: celery
+    RATE_LIMIT_BACKEND: redis
+    HF_HOME: /home/researcher/hf-cache
+    DATABASE_URL: postgresql://research:${POSTGRES_PASSWORD:-research_dev_only}@postgres:5432/research
+    REDIS_URL: redis://redis:6379/0
+    RETRIEVAL_MODE: hybrid
+    RERANKER_MODEL: ${RERANKER_MODEL:-cross-encoder/mmarco-mMiniLMv2-L12-H384-v1}
+    ALLOW_ANONYMOUS: "false"
+    LOG_FORMAT: json
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    model-cache-init:
+      condition: service_completed_successfully
+  restart: unless-stopped
+  volumes:
+    - hf_cache:/home/researcher/hf-cache
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: research
+      POSTGRES_USER: research
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-research_dev_only}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U research -d research"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  model-cache-init:
+    image: academic-research-agent:latest
+    user: root
+    command: ["sh", "-c", "mkdir -p /home/researcher/hf-cache && chown -R researcher:researcher /home/researcher/hf-cache"]
+    volumes:
+      - hf_cache:/home/researcher/hf-cache
+    restart: "no"
+
+  api:
+    <<: *app
+    ports:
+      - "127.0.0.1:8000:8000"
+    command: ["/app/.venv/bin/uvicorn", "research_agent.api:api", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    <<: *app
+    command: ["/app/.venv/bin/celery", "-A", "research_agent.tasks:celery_app", "worker", "--loglevel=INFO", "--pool=threads", "--concurrency=4", "-Q", "research"]
+    stop_grace_period: 2m
+
+  outbox:
+    <<: *app
+    command: ["/app/.venv/bin/python", "-m", "research_agent.outbox"]
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:9090:9090"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  hf_cache:

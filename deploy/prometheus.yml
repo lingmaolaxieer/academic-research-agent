@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: academic-research-api
+    static_configs:
+      - targets: ["api:8000"]
+  - job_name: academic-research-worker
+    static_configs:
+      - targets: ["worker:9101"]
+  - job_name: academic-research-outbox
+    static_configs:
+      - targets: ["outbox:9102"]

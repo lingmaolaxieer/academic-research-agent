@@ -1,0 +1,57 @@
+# ── Secrets (NEVER commit) ──────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Virtual environments (Track A: venv / Track B: uv) ──
+.venv/
+venv/
+env/
+ENV/
+
+# ── Python bytecode & caches ────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ── Build / packaging artifacts (from `*install -e .`) ──
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ── LangGraph persistence (SqliteSaver checkpoints, Phase 4) ──
+checkpoints.db
+checkpoints.db-wal
+checkpoints.db-shm
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+data/
+.uv-cache/
+.cache/
+outputs/
+
+# ── Testing / linting / typing caches (Phase 3) ─────────
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ── Notebooks (if used for eval exploration) ────────────
+.ipynb_checkpoints/
+
+# ── Editors / IDEs ──────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+
+# ── OS junk ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Logs ────────────────────────────────────────────────
+*.log

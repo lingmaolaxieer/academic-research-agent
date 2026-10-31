@@ -1,0 +1,46 @@
+{
+  "documents": [
+    {
+      "name": "synthetic_rgb_experiment.md",
+      "content": "# 合成示例：可见光目标检测\n以下数字只用于测试调研系统，不是真实论文或研究成果。方法 A 使用单帧 RGB 图像，输入尺寸 640×640。在同一合成测试集上的 Precision 为 0.82，Recall 为 0.76，单张推理延迟为 42 ms。训练样本数为 100，测试样本数为 200。该记录没有提供置信区间、跨数据集实验或真实部署结果。"
+    },
+    {
+      "name": "synthetic_multimodal_experiment.md",
+      "content": "# 合成示例：多模态目标检测\n以下数字只用于测试调研系统，不是真实论文或研究成果。方法 B 使用配准的 RGB 与热红外图像，输入尺寸 640×640。在与方法 A 相同的合成测试集上的 Precision 为 0.86，Recall 为 0.81，单张推理延迟为 67 ms。训练样本数为 100，测试样本数为 200。该记录未报告热红外缺失时的性能，也未提供跨数据集实验或置信区间。"
+    }
+  ],
+  "cases": [
+    {
+      "id": "local_facts",
+      "mode": "local",
+      "depth": "quick",
+      "query": "根据上传的合成示例，方法 A 使用什么输入模态？Precision、Recall 和单张延迟分别是多少？",
+      "expected_source": "document",
+      "expected_terms": ["RGB", "0.82|82%", "0.76|76%", "42"]
+    },
+    {
+      "id": "local_comparison",
+      "mode": "local",
+      "depth": "deep",
+      "query": "比较合成资料中方法 A 与方法 B 的输入条件、Precision、Recall 与延迟，并说明哪些结论因缺少跨数据集和置信区间实验而不能下定论。",
+      "expected_source": "document",
+      "expected_terms": ["RGB", "热红外|红外", "42", "67"]
+    },
+    {
+      "id": "web_definition",
+      "mode": "web",
+      "depth": "quick",
+      "query": "什么是检索增强生成（RAG）？用公开资料说明检索与生成两个核心步骤，并附上可核对的来源。",
+      "expected_source": "web",
+      "expected_terms": ["检索", "生成"]
+    },
+    {
+      "id": "hybrid_limits",
+      "mode": "hybrid",
+      "depth": "deep",
+      "query": "结合上传的合成目标检测记录和公开资料，分析为什么不能仅凭方法 A/B 在同一测试集上的 Precision 与 Recall 就断言方法 B 在真实场景一定更好；指出还需要验证什么。",
+      "expected_source": "document",
+      "expected_terms": ["A", "B", "测试集|泛化|场景"]
+    }
+  ]
+}
